@@ -130,21 +130,21 @@ def select_time():
 
     if timer_started == False:
 
+        time_left = time_formats[index_time_format]*60
+        if len(time_formats) > index_time_format+1:
+            index_time_format += 1
+        else:
+            index_time_format = 0
+
         lcd.clear()
         lcd.set_cursor(0, 0)
         lcd.message("Time limit:")
         lcd.set_cursor(0, 1)
         lcd.message(str (time_formats[index_time_format]) + ' minutes')
 
-        print ('\rTime limit is now set to : ' + str (time_formats[index_time_format]) + ' minutes.')
-
+        print ('\rTime limit is now set to : ' + str (time_formats[index_time_format]) + ' minutes.')  # console
+        print_to_lcd()
         print_to_leds()
-
-        time_left = time_formats[index_time_format]*60
-        if len(time_formats) > index_time_format+1:
-            index_time_format += 1
-        else:
-            index_time_format = 0
 
     return time_left, index_time_format
 
@@ -159,8 +159,10 @@ def reset_match():
         lcd.clear()
         lcd.set_cursor(0, 0)
         lcd.message("Reset")
-        print_to_leds()
+
         print_time_and_score()
+        print_to_lcd()
+        print_to_leds()
 
 
 def print_time_and_score():
@@ -191,14 +193,21 @@ def add_goal(side):
     if goals[side] <= 9:
         goals[side] += 1
     else:
-        goals[side] = O
+        goals[side] = 0
 
+    print_to_lcd()
+    print_to_leds()
 
 def remove_goal(side):
     global goals_right
     global goals_left
     if goals[side] > 0:
         goals[side] -= 1
+    else:
+        goals[side] = 9
+
+    print_to_lcd()
+    print_to_leds()
 
 
 def print_message():
@@ -262,7 +271,7 @@ def print_to_leds():
         GPIO.output(DATAIN, False if i == "0" else True)
         GPIO.output(CLOCK, True)
         GPIO.output(CLOCK, False)
-    for i in numbers[gl]:
+    for i in numbers[gr]:
         GPIO.output(DATAIN, False if i == "0" else True)
         GPIO.output(CLOCK, True)
         GPIO.output(CLOCK, False)
