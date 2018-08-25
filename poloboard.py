@@ -99,18 +99,12 @@ GPIO.output(DATAIN, False)   # Databit to be shifted into the register
 
 # Setup led segments
 init_message = [
-    "00000100",
-    "01010100",
-    "00000100",
-    "01111000"
+    "00000100",  # i
+    "01010100",  # n
+    "00000100",  # i
+    "01111000"   # t
 ]
 
-nothing_message = [
-    "00000000",
-    "00000000",
-    "00000000",
-    "00000000",
-]
 numbers = [
     "00111111",  # 0
     "00000110",  # 1
@@ -126,8 +120,8 @@ numbers = [
 ]
 
 
-
 # =================================================
+
 
 def select_time():
     global index_time_format
@@ -139,11 +133,9 @@ def select_time():
 
     if timer_started == False:
         print ('\rTime limit is now set to : ' + str (time_formats[index_time_format]) + ' minutes.')
-
         lcd.set_cursor(0, 1)
         lcd.message(str (time_formats[index_time_format]) + ' minutes')
         print_to_leds()
-
         time_left = time_formats[index_time_format]*60
         if len(time_formats) > index_time_format+1:
             index_time_format += 1
@@ -165,18 +157,20 @@ def reset_match():
     print_to_leds()
     print_time_and_score()
 
-def print_time_and_score():
 
+def print_time_and_score():
     print('\r\r --- ---  ---  ---  ---  ---  ---  --- ')
     print('\r - Time Left : ' + print_time_converted(time_left))
     print('\r - Left : ' + str(goals['left']))
     print('\r - Right : ' + str(goals['right']))
     print('\r --- ---  ---  ---  ---  ---  ---  --- \r')
 
+
 def print_time_converted(time_in_seconds):
     m, s = divmod(time_in_seconds, 60)
     time_hr  = str(m).zfill(2) + ":" + str(s).zfill(2)
     return time_hr
+
 
 def print_to_lcd():
     lcd.clear()
@@ -193,7 +187,6 @@ def add_goal(side):
         goals[side] += 1
     else:
         goals[side] = O
-    #print 'add goal to ' + side
 
 
 def remove_goal(side):
@@ -201,7 +194,6 @@ def remove_goal(side):
     global goals_left
     if goals[side] > 0:
         goals[side] -= 1
-    #print 'add goal to ' - side
 
 
 def print_message():
@@ -245,9 +237,12 @@ def print_nothing():
         GPIO.output(CLOCK, False)
     GPIO.output(LATCH, True)
 
+
 def print_to_leds():
-    global goals
     global time_left
+    global goals
+    gr = goals['right']
+    gl = goals['left']
     m, s = divmod(time_left, 60)
     secs = str(s)
     mins = str(m)
@@ -256,12 +251,8 @@ def print_to_leds():
     mins_d = int(mins[:1]) if m >= 10 else 10
     mins_u = int(mins[1:]) if m >= 10 else m
     print(str(mins_d) + str(mins_u) + ":" + str(secs_d) + str(secs_u))  # print to console
-
     GPIO.output(LATCH, False)
-# goals
-
-    gr = goals['right']
-    gl = goals['left']
+    # goals
     for i in numbers[gr]:
         GPIO.output(DATAIN, False if i == "0" else True)
         GPIO.output(CLOCK, True)
@@ -270,8 +261,7 @@ def print_to_leds():
         GPIO.output(DATAIN, False if i == "0" else True)
         GPIO.output(CLOCK, True)
         GPIO.output(CLOCK, False)
-
-# timer
+    # timer
     for i in numbers[secs_u]:
         GPIO.output(DATAIN, False if i == "0" else True)
         GPIO.output(CLOCK, True)
@@ -288,19 +278,17 @@ def print_to_leds():
         GPIO.output(DATAIN, False if i == "0" else True)
         GPIO.output(CLOCK, True)
         GPIO.output(CLOCK, False)
-
     GPIO.output(LATCH, True)
 
 def stopwatch():
     global time_left
+    global timer_started
     # print('\rStarted')
     switch_leds(True,False)
     while time_left >= 0:
-        # print print_time_converted(time_left)
-
+        print print_time_converted(time_left)
         print_to_lcd()
         print_to_leds()
-
         if time_left<=10:
             GPIO.output(LedGreen, True)
             GPIO.output(LedRed, False)
@@ -317,22 +305,15 @@ def stopwatch():
             break
         else:
             time.sleep(1)
-
         time_left -= 1
-
         if GPIO.input(StartStopButton) == GPIO.HIGH:
             switch_leds(False,True)
             print('\rPaused')
             #blink()
             break
-
+    timer_started = True
     return time_left
 
-def blink():
-    print_to_leds()
-    sleep(0.25)
-    print_nothing()
-    sleep(0.25)
 
 def switch_leds(g,r):
     GPIO.output(LedGreen, g)
@@ -340,29 +321,19 @@ def switch_leds(g,r):
     timer_started = True if g == True else False
 
 
-
 while True:
-
     try:
         print_message()
-        #print_goals()
-
-        # Setup time in seconds
-        # input = int(raw_input("Enter time limit (10) : ") or "10")
-        #input = 12
-        #time_left = input * 60
         stopwatch()
-
-        #print_msg()
-        #time_left = abs(int(time_total))
-
         while True:
             if GPIO.input(StartStopButton) == GPIO.LOW:
                 time_left = stopwatch()
+                timer_started = True
+            else:
+                timer_started = False
 
     except KeyboardInterrupt:
         print "\rExit"
         lcd.clear()
         GPIO.cleanup()
         break
-
