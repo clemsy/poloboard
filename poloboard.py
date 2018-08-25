@@ -41,7 +41,7 @@ lcd_backlight = 27
 lcd_columns = 16
 lcd_rows = 2
 
-lcd = LCD.Adafruit_CharLCD(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6, lcd_d7, lcd_columns, lcd_rows, lcd_backlight)
+lcd = LCD.Adafruit_CharLCD(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6, lcd_d7, lcd_columns, lcd_rows)
 
 lcd.clear()
 
@@ -126,16 +126,20 @@ numbers = [
 def select_time():
     global index_time_format
     global time_left
-
-    lcd.clear()
-    lcd.set_cursor(0, 0)
-    lcd.message("Time limit:")
+    global timer_started
 
     if timer_started == False:
-        print ('\rTime limit is now set to : ' + str (time_formats[index_time_format]) + ' minutes.')
+
+        lcd.clear()
+        lcd.set_cursor(0, 0)
+        lcd.message("Time limit:")
         lcd.set_cursor(0, 1)
         lcd.message(str (time_formats[index_time_format]) + ' minutes')
+
+        print ('\rTime limit is now set to : ' + str (time_formats[index_time_format]) + ' minutes.')
+
         print_to_leds()
+
         time_left = time_formats[index_time_format]*60
         if len(time_formats) > index_time_format+1:
             index_time_format += 1
@@ -146,16 +150,17 @@ def select_time():
 
 
 def reset_match():
-    goals['left'] = 0
-    goals['right'] = 0
-    global time_left
-    time_left = time_total
-    print('Reset Time and Goals')
-    lcd.clear()
-    lcd.set_cursor(0, 0)
-    lcd.message("Reset")
-    print_to_leds()
-    print_time_and_score()
+    if timer_started == False:
+        goals['left'] = 0
+        goals['right'] = 0
+        global time_left
+        time_left = time_total
+        print('Reset Time and Goals')
+        lcd.clear()
+        lcd.set_cursor(0, 0)
+        lcd.message("Reset")
+        print_to_leds()
+        print_time_and_score()
 
 
 def print_time_and_score():
@@ -305,20 +310,20 @@ def stopwatch():
             break
         else:
             time.sleep(1)
+        timer_started = True
         time_left -= 1
         if GPIO.input(StartStopButton) == GPIO.HIGH:
             switch_leds(False,True)
             print('\rPaused')
             #blink()
             break
-    timer_started = True
+
     return time_left
 
 
 def switch_leds(g,r):
     GPIO.output(LedGreen, g)
     GPIO.output(LedRed, r)
-    timer_started = True if g == True else False
 
 
 while True:
