@@ -3,18 +3,19 @@
 import RPi.GPIO as GPIO
 import time
 from time import sleep
-
-# LCD
 import Adafruit_CharLCD as LCD
 
 
+# =================================================
+
+
+# GPIO Setup
+GPIO.setwarnings(True)
 
 goals = {}
 goals['left'] = 0
 goals['right'] = 0
 
-
-print('Press button to select time 10, 12, 15 or 20 minutes game')
 
 #  Variables
 time_formats = [10, 12, 15, 20]
@@ -22,10 +23,6 @@ index_time_format = 0
 time_left = time_formats[index_time_format]*60  # sets default to 10 minutes game
 time_total = time_left
 timer_started = False
-
-
-# GPIO Setup
-GPIO.setwarnings(True)
 
 
 # Raspberry Pi pin setup
@@ -211,6 +208,7 @@ def remove_goal(side):
 
 
 def print_message():
+    print('Press button to select time 10, 12, 15 or 20 minutes game')
     GPIO.output(LATCH, False)
     for i in init_message[3]:
         GPIO.output(DATAIN, False if i == "0" else True)
@@ -257,6 +255,7 @@ def print_to_leds():
     global goals
     gr = goals['right']
     gl = goals['left']
+
     m, s = divmod(time_left, 60)
     secs = str(s)
     mins = str(m)
@@ -264,7 +263,7 @@ def print_to_leds():
     secs_u = int(secs[1:]) if s >= 10 else s
     mins_d = int(mins[:1]) if m >= 10 else 10
     mins_u = int(mins[1:]) if m >= 10 else m
-    print(str(mins_d) + str(mins_u) + ":" + str(secs_d) + str(secs_u))  # print to console
+
     GPIO.output(LATCH, False)
     # goals
     for i in numbers[gr]:
@@ -293,6 +292,7 @@ def print_to_leds():
         GPIO.output(CLOCK, True)
         GPIO.output(CLOCK, False)
     GPIO.output(LATCH, True)
+
 
 def stopwatch():
     global time_left
