@@ -10,7 +10,8 @@ import Adafruit_CharLCD as LCD
 
 
 # GPIO Setup
-GPIO.setwarnings(True)
+GPIO.cleanup()
+GPIO.setwarnings(False)
 
 goals = {}
 goals['left'] = 0
@@ -103,17 +104,17 @@ init_message = [
 ]
 
 numbers = [
-    "00111111",  # 0
-    "00000110",  # 1
-    "01011011",  # 2
-    "01001111",  # 3
-    "01100110",  # 4
-    "01101101",  # 5
-    "01111101",  # 6
-    "00000111",  # 7
-    "01111111",  # 8
-    "01101111",  # 9
-    "00000000",  # null
+    "10111111",  # 0
+    "10000110",  # 1
+    "11011011",  # 2
+    "11001111",  # 3
+    "11100110",  # 4
+    "11101101",  # 5
+    "11111101",  # 6
+    "10000111",  # 7
+    "11111111",  # 8
+    "11101111",  # 9
+    "10000000",  # null
 ]
 
 
@@ -148,9 +149,12 @@ def select_time():
 
 def reset_match():
     if timer_started == False:
+        global goals
+        global index_time_format
+        global time_left
+        index_time_format = 0
         goals['left'] = 0
         goals['right'] = 0
-        global time_left
         time_left = time_total
         print('Reset Time and Goals')
         lcd.clear()
@@ -185,8 +189,7 @@ def print_to_lcd():
 
 
 def add_goal(side):
-    global goals_right
-    global goals_left
+    global goals
     if goals[side] <= 9:
         goals[side] += 1
     else:
@@ -196,8 +199,7 @@ def add_goal(side):
     print_to_leds()
 
 def remove_goal(side):
-    global goals_right
-    global goals_left
+    global goals
     if goals[side] > 0:
         goals[side] -= 1
     else:
@@ -209,45 +211,6 @@ def remove_goal(side):
 
 def print_message():
     print('Press button to select time 10, 12, 15 or 20 minutes game')
-    GPIO.output(LATCH, False)
-    for i in init_message[3]:
-        GPIO.output(DATAIN, False if i == "0" else True)
-        GPIO.output(CLOCK, True)
-        GPIO.output(CLOCK, False)
-    for i in init_message[2]:
-        GPIO.output(DATAIN, False if i == "0" else True)
-        GPIO.output(CLOCK, True)
-        GPIO.output(CLOCK, False)
-    for i in init_message[1]:
-        GPIO.output(DATAIN, False if i == "0" else True)
-        GPIO.output(CLOCK, True)
-        GPIO.output(CLOCK, False)
-    for i in init_message[0]:
-        GPIO.output(DATAIN, False if i == "0" else True)
-        GPIO.output(CLOCK, True)
-        GPIO.output(CLOCK, False)
-    GPIO.output(LATCH, True)
-
-
-def print_nothing():
-    GPIO.output(LATCH, False)
-    for i in "00000000":
-        GPIO.output(DATAIN, False)
-        GPIO.output(CLOCK, True)
-        GPIO.output(CLOCK, False)
-    for i in "00000000":
-        GPIO.output(DATAIN, False)
-        GPIO.output(CLOCK, True)
-        GPIO.output(CLOCK, False)
-    for i in "00000000":
-        GPIO.output(DATAIN, False)
-        GPIO.output(CLOCK, True)
-        GPIO.output(CLOCK, False)
-    for i in "00000000":
-        GPIO.output(DATAIN, False)
-        GPIO.output(CLOCK, True)
-        GPIO.output(CLOCK, False)
-    GPIO.output(LATCH, True)
 
 
 def print_to_leds():
@@ -283,8 +246,12 @@ def print_to_leds():
         GPIO.output(DATAIN, False if i == "0" else True)
         GPIO.output(CLOCK, True)
         GPIO.output(CLOCK, False)
-    for i in numbers[mins_u]:
-        GPIO.output(DATAIN, False if i == "0" else True)
+    for k, i in enumerate(numbers[mins_u]):
+        #  print i
+        if k == 0:
+            GPIO.output(DATAIN, True)  # will always print the 2 dots between minutes and seconds
+        else:
+            GPIO.output(DATAIN, False if i == "0" else True)
         GPIO.output(CLOCK, True)
         GPIO.output(CLOCK, False)
     for i in numbers[mins_d]:
@@ -337,7 +304,7 @@ def switch_leds(g,r):
 
 while True:
     try:
-        print_message()
+        #print_message()
         stopwatch()
         while True:
             if GPIO.input(StartStopButton) == GPIO.LOW:
