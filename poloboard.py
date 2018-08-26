@@ -174,20 +174,6 @@ def print_time_and_score():
     print('\r --- ---  ---  ---  ---  ---  ---  --- \r')
 
 
-def print_time_converted(time_in_seconds):
-    m, s = divmod(time_in_seconds, 60)
-    time_hr  = str(m).zfill(2) + ":" + str(s).zfill(2)
-    return time_hr
-
-
-def print_to_lcd():
-    lcd.clear()
-    lcd.set_cursor(0, 0)
-    lcd.message(print_time_converted(time_left))
-    lcd.set_cursor(0, 1)
-    lcd.message("L: " + str(goals['left']) + "    |   R: " + str(goals['right']))
-
-
 def add_goal(side):
     global goals
     if goals[side] <= 9:
@@ -195,8 +181,10 @@ def add_goal(side):
     else:
         goals[side] = 0
 
+    print_to_console('+1')
     print_to_lcd()
     print_to_leds()
+
 
 def remove_goal(side):
     global goals
@@ -205,12 +193,31 @@ def remove_goal(side):
     else:
         goals[side] = 9
 
+    print_to_console('-1')
     print_to_lcd()
     print_to_leds()
 
 
+def print_time_converted(time_in_seconds):
+    m, s = divmod(time_in_seconds, 60)
+    time_hr  = str(m).zfill(2) + ":" + str(s).zfill(2)
+    return time_hr
+
+
+def print_to_console(msg=time_left):
+    print(msg)
+
+
 def print_message():
     print('Press button to select time 10, 12, 15 or 20 minutes game')
+
+
+def print_to_lcd():
+    lcd.clear()
+    lcd.set_cursor(0, 0)
+    lcd.message(print_time_converted(time_left))
+    lcd.set_cursor(0, 1)
+    lcd.message("L: " + str(goals['left']) + "    |   R: " + str(goals['right']))
 
 
 def print_to_leds():
