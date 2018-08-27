@@ -64,11 +64,11 @@ GPIO.setup(ResetButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # button
 GPIO.setup(RightPlusButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # button
 GPIO.setup(RightMinusButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # button
 
-GPIO.add_event_detect(RightPlusButton, GPIO.BOTH, callback=lambda a: add_goal('right'), bouncetime=100)
-GPIO.add_event_detect(RightMinusButton, GPIO.BOTH, callback=lambda b: remove_goal('right'), bouncetime=100)
+GPIO.add_event_detect(RightPlusButton, GPIO.FALLING, callback=lambda a: add_goal('right'), bouncetime=100)
+GPIO.add_event_detect(RightMinusButton, GPIO.FALLING, callback=lambda b: remove_goal('right'), bouncetime=100)
 
-GPIO.add_event_detect(SelectTimeButton, GPIO.BOTH, callback=lambda c: select_time(), bouncetime=1000)
-GPIO.add_event_detect(ResetButton, GPIO.BOTH, callback=lambda d: reset_match(), bouncetime=500)
+GPIO.add_event_detect(SelectTimeButton, GPIO.FALLING, callback=lambda c: select_time(), bouncetime=1000)
+GPIO.add_event_detect(ResetButton, GPIO.FALLING, callback=lambda d: reset_match(), bouncetime=500)
 
 GPIO.setup(LedRed, GPIO.OUT)  # red led
 GPIO.setup(LedGreen, GPIO.OUT)  # green led
