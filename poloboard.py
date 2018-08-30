@@ -4,6 +4,8 @@ import RPi.GPIO as GPIO
 import time
 from time import sleep
 import Adafruit_CharLCD as LCD
+import subprocess
+
 
 
 # =================================================
@@ -13,9 +15,6 @@ import Adafruit_CharLCD as LCD
 GPIO.cleanup()
 GPIO.setwarnings(False)
 
-goals = {}
-goals['left'] = 0
-goals['right'] = 0
 
 
 #  Variables
@@ -24,6 +23,10 @@ index_time_format = 0
 time_left = time_formats[index_time_format]*60  # sets default to 10 minutes game
 time_total = time_left
 timer_started = False
+
+goals = {}
+goals['left'] = 0
+goals['right'] = 0
 
 
 # Raspberry Pi pin setup
@@ -47,15 +50,20 @@ lcd.clear()
 
 StartStopButton = 21
 
-ResetButton = 14
-SelectTimeButton = 15
+ResetButton = 24
+SelectTimeButton = 25
 
 LedGreen = 20
 LedRed = 16
 
-RightPlusButton = 12
-RightMinusButton = 7
+RightPlusButton = 14
+RightMinusButton = 15
+LeftPlusButton = 18
+LeftMinusButton = 23
 
+RebootButton = 12
+
+GPIO.setup(RebootButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # reboot button
 GPIO.setup(StartStopButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # start stop button
 
 GPIO.setup(SelectTimeButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # button
@@ -63,12 +71,18 @@ GPIO.setup(ResetButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # button
 
 GPIO.setup(RightPlusButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # button
 GPIO.setup(RightMinusButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # button
+GPIO.setup(LeftPlusButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # button
+GPIO.setup(LeftMinusButton, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # button
 
-GPIO.add_event_detect(RightPlusButton, GPIO.FALLING, callback=lambda a: add_goal('right'), bouncetime=100)
-GPIO.add_event_detect(RightMinusButton, GPIO.FALLING, callback=lambda b: remove_goal('right'), bouncetime=100)
+GPIO.add_event_detect(RightPlusButton, GPIO.FALLING, callback=lambda a: add_goal('right'), bouncetime=500)
+GPIO.add_event_detect(RightMinusButton, GPIO.FALLING, callback=lambda b: remove_goal('right'), bouncetime=500)
+GPIO.add_event_detect(LeftPlusButton, GPIO.FALLING, callback=lambda e: add_goal('left'), bouncetime=500)
+GPIO.add_event_detect(LeftMinusButton, GPIO.FALLING, callback=lambda f: remove_goal('left'), bouncetime=500)
 
-GPIO.add_event_detect(SelectTimeButton, GPIO.FALLING, callback=lambda c: select_time(), bouncetime=1000)
-GPIO.add_event_detect(ResetButton, GPIO.FALLING, callback=lambda d: reset_match(), bouncetime=500)
+GPIO.add_event_detect(RebootButton, GPIO.FALLING, callback=lambda r: reboot(), bouncetime=200)
+
+GPIO.add_event_detect(SelectTimeButton, GPIO.FALLING, callback=lambda c: select_time(), bouncetime=200)
+GPIO.add_event_detect(ResetButton, GPIO.FALLING, callback=lambda d: reset_match(), bouncetime=200)
 
 GPIO.setup(LedRed, GPIO.OUT)  # red led
 GPIO.setup(LedGreen, GPIO.OUT)  # green led
@@ -120,6 +134,14 @@ numbers = [
 
 # =================================================
 
+def reboot():
+    print "Stop requested, Halting the RPi now!"
+
+    lcd.clear()
+    lcd.set_cursor(0, 0)
+    lcd.message("Rebooting...")
+
+    subprocess.call(['reboot'], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 def select_time():
     global index_time_format
@@ -143,6 +165,7 @@ def select_time():
         print ('\rTime limit is now set to : ' + str (time_formats[index_time_format]) + ' minutes.')  # console
         print_to_lcd()
         print_to_leds()
+        sleep(0.5)
 
     return time_left, index_time_format
 
@@ -152,7 +175,8 @@ def reset_match():
         global goals
         global index_time_format
         global time_left
-        index_time_format = 0
+        global index_time_format
+        # index_time_format = 0
         goals['left'] = 0
         goals['right'] = 0
         time_left = time_total
@@ -229,14 +253,16 @@ def print_to_leds():
     m, s = divmod(time_left, 60)
     secs = str(s)
     mins = str(m)
+
     secs_d = int(secs[:1]) if s >= 10 else 0
     secs_u = int(secs[1:]) if s >= 10 else s
     mins_d = int(mins[:1]) if m >= 10 else 10
     mins_u = int(mins[1:]) if m >= 10 else m
 
+
     GPIO.output(LATCH, False)
     # goals
-    for i in numbers[gr]:
+    for i in numbers[gl]:
         GPIO.output(DATAIN, False if i == "0" else True)
         GPIO.output(CLOCK, True)
         GPIO.output(CLOCK, False)
@@ -311,8 +337,10 @@ def switch_leds(g,r):
 
 while True:
     try:
+
         #print_message()
         stopwatch()
+
         while True:
             if GPIO.input(StartStopButton) == GPIO.LOW:
                 time_left = stopwatch()
